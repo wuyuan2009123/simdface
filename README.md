@@ -134,6 +134,18 @@ JPEG 解码由不同解码器完成，像素会有细微差异，从而让检测
 
 本机 Intel UHD Graphics（Vulkan 1.2）与 8 核 CPU 实测：单图检测 CPU 约 0.1–0.3 秒、Vulkan 约 0.15–0.2 秒；双图六裁剪比对 CPU 约 2.2 秒、Vulkan 约 1.0 秒。CPU 线程数可用 `-Dsimdface.threads=N` 调整。
 
+## 待办：CPU Vector API 优化
+
+当前 CPU 内核（[Kernels.java](src/main/java/cn/donet/simdface/Kernels.java)）使用普通 Java 循环，依赖 HotSpot JIT 自动向量化；原版 C# 使用 `System.Numerics.Vector<float>` 做显式 SIMD。可以进一步用 JDK Vector API（`jdk.incubator.vector`）改写热点循环，缩小 CPU 与 Vulkan / C# 原版的差距。
+
+- [ ] 为 `Kernels.accumulate`、`Kernels.dot`、`Kernels.reluInPlace`、`Kernels.normalizeAndActivate`、`Kernels.batchNorm` 增加 `FloatVector` 实现，保留标量尾循环。
+- [ ] 在卷积逐通道累加、`Kernels.dense` 点积，以及 `FaceRecognizer` 的 L2 归一化和余弦相似度中复用。
+- [ ] 编译和运行需要 `--add-modules jdk.incubator.vector`（Java 17–25 仍是 incubator 模块）；向量 API 不可用时回退到现有标量实现。
+- [ ] 用 `detect` 和 `compare` 做基准对比，目标是把双图六裁剪比对的 CPU 耗时从约 2.2 秒压到 1.5 秒以内（以实测为准），同时确认检测框和特征相似度与现有实现一致。
+- [ ] 若要兼容 Java 17 以下的运行时，可用多版本 JAR 或服务加载隔离 Vector API 类，避免类加载失败。
+
+预期收益主要来自 SFace 的卷积和 `dense`，以及 YuNet 的 3×3 卷积。
+
 ## 模型与许可证
 
 | 权重 | 用途 | 上游和许可证 |
