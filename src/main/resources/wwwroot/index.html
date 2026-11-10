@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="SimdFace 本地人脸检测和比对测试台">
+  <title>SimdFace · 人脸识别测试台</title>
+  <link rel="stylesheet" href="app.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="shell topbar-inner">
+      <div class="brand"><span class="brand-icon" aria-hidden="true">⌖</span>SimdFace</div>
+      <span class="local"><i></i>本机运行</span>
+    </div>
+  </header>
+  <main class="shell">
+    <section class="hero" aria-labelledby="page-title">
+      <div class="hero-copy">
+        <span class="eyebrow">SIMDFACE / JAVA WEB LAB</span>
+        <h1 id="page-title">人脸识别测试台</h1>
+        <p>上传照片查看人脸框和五点定位，或用两张照片测试 1:1 比对。</p>
+        <div class="stack"><span>Java 17+</span><span>YuNet + SFace</span><span id="engine-label">CPU</span></div>
+      </div>
+      <svg class="hero-art" viewBox="0 0 260 200" fill="none" aria-hidden="true">
+        <circle cx="130" cy="100" r="96"/><circle cx="130" cy="100" r="74"/>
+        <path d="M36 100h188M130 6v188" stroke-dasharray="3 6"/>
+        <path class="art-frame" d="M73 68V45h23m68 0h23v23m0 65v23h-23m-68 0H73v-23"/>
+        <path class="art-lines" d="m101 78 29 29 29-29m-58 0 8 50h42l8-50m-50 50 21-21 21 21"/>
+        <circle class="art-point" cx="101" cy="78" r="4"/><circle class="art-point" cx="159" cy="78" r="4"/>
+        <circle class="art-point" cx="130" cy="107" r="4"/><circle class="art-point" cx="109" cy="128" r="4"/>
+        <circle class="art-point" cx="151" cy="128" r="4"/>
+      </svg>
+    </section>
+
+    <section class="workbench" aria-labelledby="workbench-title">
+      <div class="workbench-header">
+        <div><h2 id="workbench-title">开始测试</h2><p id="mode-description">查看单张照片中的所有检测结果。</p><p id="wasm-status" role="status" hidden></p></div>
+        <div class="switcher" role="group" aria-label="测试模式">
+          <button type="button" data-mode="detect" aria-pressed="true">单图检测</button>
+          <button type="button" data-mode="compare" aria-pressed="false">双图比对</button>
+          <button type="button" data-mode="extract" data-local-only aria-pressed="false" hidden>提取特征</button>
+          <button type="button" data-mode="vectors" data-local-only aria-pressed="false" hidden>向量比对</button>
+        </div>
+      </div>
+      <form id="tester">
+        <div id="uploads" class="uploads"></div>
+        <div id="feature-files" class="uploads compare" hidden>
+          <label class="feature-file">特征 A<input id="feature-a" type="file" accept=".json,application/json"></label>
+          <label class="feature-file">特征 B<input id="feature-b" type="file" accept=".json,application/json"></label>
+        </div>
+        <div class="controls">
+          <label id="backend-control">推理设备 <select id="backend"><option value="wasm" disabled hidden>浏览器 WASM</option><option value="cpu">后端 CPU</option><option value="vulkan">后端 GPU（Vulkan）</option></select></label>
+          <label id="score-control">检测阈值 <input id="score" type="number" min="0.001" max="1" step="any" value="0.8" required></label>
+          <label id="threshold-control" hidden>同人阈值 <input id="threshold" type="number" min="-1" max="1" step="any" placeholder="0.68（默认）" disabled></label>
+          <button id="run" class="primary" type="submit" disabled>开始检测 <span aria-hidden="true">→</span></button>
+        </div>
+      </form>
+      <div id="results" class="results" aria-live="polite" aria-atomic="true">
+        <div id="result-mark" class="result-mark" aria-hidden="true">◎</div>
+        <div><strong id="result-title">等待测试</strong><p id="result-detail">选择照片后，点击开始检测。</p></div>
+      </div>
+      <div id="feature-export" class="feature-export" hidden>
+        <label for="feature-json">128 维 SFace 特征</label>
+        <textarea id="feature-json" rows="6" readonly spellcheck="false"></textarea>
+        <button id="download-feature" class="primary" type="button">下载特征 JSON</button>
+      </div>
+    </section>
+    <footer><span>SimdFace 0.1.0</span><span id="processing-note">照片仅在本机处理 · 不写入磁盘</span></footer>
+  </main>
+  <template id="upload-template">
+    <section class="upload">
+      <div class="upload-heading"><h3></h3><span class="image-info"></span></div>
+      <label class="dropzone">
+        <input type="file" class="file-picker" accept="image/jpeg,image/png,image/bmp,image/gif,image/tiff">
+        <span class="empty-upload">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 16V4m-4 4 4-4 4 4M4 15v5h16v-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <strong>点击或拖入照片</strong><small>JPG、PNG、BMP、GIF、TIFF · 最大 64 MiB、6400 万像素</small>
+        </span>
+        <span class="preview" hidden><canvas></canvas><svg class="overlay" aria-hidden="true"></svg></span>
+      </label>
+      <p class="upload-error" role="alert" hidden></p>
+    </section>
+  </template>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "simdface-web",
+      "runtimeExecutable": "java",
+      "runtimeArgs": [
+        "-cp",
+        "target/simdface.jar",
+        "cn.donet.simdface.web.WebServer",
+        "--port",
+        "5099"
+      ],
+      "port": 5099
+    }
+  ]
+}
